@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">WhiteBoard</string>
+    <string name="normal">Normal</string>
+    <string name="emboss">Emboss</string>
+    <string name="blur">Blur</string>
+    <string name="clear">Clear</string>
 </resources>
