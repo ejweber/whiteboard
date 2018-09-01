@@ -3,20 +3,22 @@
 
     <item
         android:id="@+id/brushwidth"
+        android:icon="@drawable/ic_trash_can"
         android:title="Brush Width" />
     <item
         android:id="@+id/bgcolor"
+        android:icon="@drawable/ic_arrow"
         android:title="Background Color" />
     <item
         android:id="@+id/normal"
+        android:icon="@drawable/ic_mute"
         android:title="@string/normal" />
     <item
         android:id="@+id/emboss"
+        android:icon="@drawable/ic_pin"
         android:title="@string/emboss" />
     <item
         android:id="@+id/blur"
+        android:icon="@drawable/ic_trash_man"
         android:title="@string/blur" />
-    <item
-        android:id="@+id/clear"
-        android:title="@string/clear" />
 </menu>

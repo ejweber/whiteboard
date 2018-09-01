@@ -40,9 +40,9 @@ public class MainActivity extends Activity {
             case R.id.blur:
                 paintView.blur();
                 return true;
-            case R.id.clear:
-                paintView.clear();
-                return true;
+            //case R.id.clear:
+            //    paintView.clear();
+            //    return true;
         }
         return super.onOptionsItemSelected(item);
     }
