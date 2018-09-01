@@ -2,6 +2,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
+        android:id="@+id/brushwidth"
+        android:title="Brush Width" />
+    <item
+        android:id="@+id/bgcolor"
+        android:title="Background Color" />
+    <item
         android:id="@+id/normal"
         android:title="@string/normal" />
     <item
@@ -13,7 +19,4 @@
     <item
         android:id="@+id/clear"
         android:title="@string/clear" />
-    <item
-        android:id="@+id/jacob"
-        android:title="Jacob" />
 </menu>
