@@ -13,6 +13,8 @@ import com.jaredrummler.android.colorpicker.ColorPickerDialog;
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener;
 
 public class MainActivity extends Activity implements ColorPickerDialogListener {
+    private static final int FOREGROUND_PICKER_ID = 0;
+    private static final int BACKGROUND_PICKER_ID = 1;
     private PaintView paintView;
 
     @Override
@@ -26,10 +28,10 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
         paintView.init(metrics);
 
         final Button foregroundButton = findViewById(R.id.foreground);
-        foregroundButton.setOnClickListener(new ColorPickerButtonClick());
+        foregroundButton.setOnClickListener(new ColorPickerButtonClick(FOREGROUND_PICKER_ID));
 
         final Button backgroundButton = findViewById(R.id.background);
-        backgroundButton.setOnClickListener(new ColorPickerButtonClick());
+        backgroundButton.setOnClickListener(new ColorPickerButtonClick(BACKGROUND_PICKER_ID));
     }
 
     @Override
@@ -60,7 +62,14 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
 
     @Override
     public void onColorSelected(int dialogId, int color) {
-        //TODO: actually do something with selected color
+        switch(dialogId) {
+            case FOREGROUND_PICKER_ID:
+                paintView.changeCurrentColor(color);
+                break;
+            case BACKGROUND_PICKER_ID:
+                paintView.changeBackground(color);
+                break;
+        }
     }
 
     @Override
@@ -69,9 +78,16 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
     }
 
     class ColorPickerButtonClick implements View.OnClickListener {
+        private int dialogId;
+
+        ColorPickerButtonClick(int dialogId) {
+            this.dialogId = dialogId;
+        }
+
         @Override
         public void onClick(View v) {
             ColorPickerDialog.newBuilder()
+                    .setDialogId(dialogId)
                     .show(MainActivity.this);
         }
     }

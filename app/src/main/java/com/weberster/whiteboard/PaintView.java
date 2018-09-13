@@ -74,6 +74,7 @@ public class PaintView extends View {
 
     public void changeBackground(int newColor) {
         backgroundColor = newColor;
+        invalidate();
     }
 
     public void changeCurrentColor(int newColor) {
