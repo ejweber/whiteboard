@@ -1,41 +1,35 @@
 package com.weberster.whiteboard;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.util.LayoutDirection;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.PopupWindow;
-import android.view.Gravity;
+import android.widget.Button;
 
-public class MainActivity extends Activity {
+import com.jaredrummler.android.colorpicker.ColorPickerDialog;
+import com.jaredrummler.android.colorpicker.ColorPickerDialogListener;
 
+public class MainActivity extends Activity implements ColorPickerDialogListener {
     private PaintView paintView;
-    private PopupWindow popup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         paintView = findViewById(R.id.paint_view);
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         paintView.init(metrics);
 
-        // TEST popup window functionality
-        LayoutInflater layoutInflater = getLayoutInflater();
-        View popupView = layoutInflater.inflate(R.layout.color_picker, null);
-        popup = new PopupWindow(
-                popupView,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
+        final Button foregroundButton = findViewById(R.id.foreground);
+        foregroundButton.setOnClickListener(new ColorPickerButtonClick());
+
+        final Button backgroundButton = findViewById(R.id.background);
+        backgroundButton.setOnClickListener(new ColorPickerButtonClick());
     }
 
     @Override
@@ -47,7 +41,7 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
+        switch (item.getItemId()) {
             case R.id.normal:
                 paintView.normal();
                 return true;
@@ -65,7 +59,20 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    public void onAttachedToWindow() {
-        popup.showAtLocation(findViewById(R.id.activity_main), Gravity.CENTER, 0,0);
+    public void onColorSelected(int dialogId, int color) {
+        //TODO: actually do something with selected color
+    }
+
+    @Override
+    public void onDialogDismissed(int dialogId) {
+        // placeholder due to required implementation
+    }
+
+    class ColorPickerButtonClick implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            ColorPickerDialog.newBuilder()
+                    .show(MainActivity.this);
+        }
     }
 }
