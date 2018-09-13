@@ -1,15 +1,23 @@
 package com.weberster.whiteboard;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.LayoutDirection;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.PopupWindow;
+import android.view.Gravity;
 
 public class MainActivity extends Activity {
 
     private PaintView paintView;
+    private PopupWindow popup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,6 +27,15 @@ public class MainActivity extends Activity {
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         paintView.init(metrics);
+
+        // TEST popup window functionality
+        LayoutInflater layoutInflater = getLayoutInflater();
+        View popupView = layoutInflater.inflate(R.layout.color_picker, null);
+        popup = new PopupWindow(
+                popupView,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
     }
 
     @Override
@@ -45,5 +62,10 @@ public class MainActivity extends Activity {
             //    return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        popup.showAtLocation(findViewById(R.id.activity_main), Gravity.CENTER, 0,0);
     }
 }
