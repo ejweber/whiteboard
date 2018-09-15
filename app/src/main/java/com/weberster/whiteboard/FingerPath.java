@@ -1,6 +1,7 @@
 package com.weberster.whiteboard;
 
 import android.graphics.Path;
+import android.util.Log;
 
 public class FingerPath {
 

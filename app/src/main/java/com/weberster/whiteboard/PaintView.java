@@ -18,7 +18,8 @@ import java.util.ArrayList;
 
 public class PaintView extends View {
 
-    public static int BRUSH_SIZE = 20;
+    public static int DEFAULT_WIDTH = 20;
+    public static int MAX_WIDTH = 200;
     public static final int DEFAULT_COLOR = Color.RED;
     public static final int DEFAULT_BG_COLOR = Color.WHITE;
     private static final float TOUCH_TOLERANCE = 4;
@@ -26,7 +27,7 @@ public class PaintView extends View {
     private Path mPath;
     private Paint mPaint;
     private ArrayList<FingerPath> paths = new ArrayList<>();
-    private int currentColor;
+    private int foregroundColor;
     private int backgroundColor = DEFAULT_BG_COLOR;
     private int strokeWidth;
     private boolean emboss;
@@ -64,29 +65,45 @@ public class PaintView extends View {
         mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
 
-        currentColor = DEFAULT_COLOR;
-        strokeWidth = BRUSH_SIZE;
+        foregroundColor = DEFAULT_COLOR;
+        strokeWidth = DEFAULT_WIDTH;
     }
 
-    public void normal() {
-        emboss = false;
-        blur = false;
+    public void setWidth(int newWidth) {
+        strokeWidth = newWidth;
     }
 
-    public void emboss() {
-        emboss = true;
-        blur = false;
+    public void setBackground(int newColor) {
+        backgroundColor = newColor;
+        invalidate();
     }
 
-    public void blur() {
-        emboss = false;
-        blur = true;
+    public void setForeground(int newColor) {
+        foregroundColor = newColor;
+    }
+
+    public void setEmboss(boolean isSet) {
+        emboss = isSet;
+    }
+
+    public void setBlur(boolean isSet) {
+        blur = isSet;
+    }
+
+    public int getForegroundColor() {
+        return foregroundColor;
+    }
+
+    public int getBackgroundColor() {
+        return backgroundColor;
     }
 
     public void clear() {
+        foregroundColor = DEFAULT_COLOR;
         backgroundColor = DEFAULT_BG_COLOR;
         paths.clear();
-        normal();
+        emboss = false;
+        blur = false;
         invalidate();
     }
 
@@ -114,7 +131,7 @@ public class PaintView extends View {
 
     private void touchStart(float x, float y) {
         mPath = new Path();
-        FingerPath fp = new FingerPath(currentColor, emboss, blur, strokeWidth, mPath);
+        FingerPath fp = new FingerPath(foregroundColor, emboss, blur, strokeWidth, mPath);
         paths.add(fp);
 
         mPath.reset();
