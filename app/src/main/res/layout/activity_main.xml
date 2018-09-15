@@ -25,7 +25,7 @@
             android:text="Brush Width" />
 
         <SeekBar
-            android:id="@+id/brushwidth"
+            android:id="@+id/brush_width"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1" />

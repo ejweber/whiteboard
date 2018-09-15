@@ -3,11 +3,11 @@ package com.weberster.whiteboard;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.SeekBar;
+import android.widget.ToggleButton;
 
 import com.jaredrummler.android.colorpicker.ColorPickerDialog;
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener;
@@ -32,42 +32,30 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
 
         final Button backgroundButton = findViewById(R.id.background);
         backgroundButton.setOnClickListener(new ColorPickerButtonClick(BACKGROUND_PICKER_ID));
-    }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater menuInflater = getMenuInflater();
-        menuInflater.inflate(R.menu.main, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
+        final ToggleButton embossToggle = findViewById(R.id.emboss);
+        embossToggle.setOnCheckedChangeListener(new EmbossToggleClick());
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.normal:
-                paintView.normal();
-                return true;
-            case R.id.emboss:
-                paintView.emboss();
-                return true;
-            case R.id.blur:
-                paintView.blur();
-                return true;
-            //case R.id.clear:
-            //    paintView.clear();
-            //    return true;
-        }
-        return super.onOptionsItemSelected(item);
+        final ToggleButton blurToggle = findViewById(R.id.blur);
+        blurToggle.setOnCheckedChangeListener(new BlurToggleClick());
+
+        final SeekBar widthBar = findViewById(R.id.brush_width);
+        widthBar.setOnSeekBarChangeListener(new SeekBarChanged());
+        widthBar.setMax(PaintView.MAX_WIDTH);
+        widthBar.setProgress(PaintView.DEFAULT_WIDTH);
+
+        final Button clearButton = findViewById(R.id.clear);
+        clearButton.setOnClickListener(new ClearButtonClick(embossToggle, blurToggle, widthBar));
     }
 
     @Override
     public void onColorSelected(int dialogId, int color) {
         switch(dialogId) {
             case FOREGROUND_PICKER_ID:
-                paintView.changeForeground(color);
+                paintView.setForeground(color);
                 break;
             case BACKGROUND_PICKER_ID:
-                paintView.changeBackground(color);
+                paintView.setBackground(color);
                 break;
         }
     }
@@ -100,6 +88,57 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
                     .setColor(color)
                     .setShowAlphaSlider(showAlphaBool)
                     .show(MainActivity.this);
+        }
+    }
+
+    class EmbossToggleClick implements CompoundButton.OnCheckedChangeListener {
+        @Override
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            paintView.setEmboss(isChecked);
+        }
+    }
+
+    class BlurToggleClick implements CompoundButton.OnCheckedChangeListener {
+        @Override
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            paintView.setBlur(isChecked);
+        }
+    }
+
+    class ClearButtonClick implements View.OnClickListener {
+        private ToggleButton embossToggle;
+        private ToggleButton blurToggle;
+        private SeekBar widthBar;
+
+        ClearButtonClick(ToggleButton embossToggle, ToggleButton blurToggle, SeekBar widthBar) {
+            this.embossToggle = embossToggle;
+            this.blurToggle = blurToggle;
+            this.widthBar = widthBar;
+        }
+
+        @Override
+        public void onClick(View v) {
+            paintView.clear();
+            embossToggle.setChecked(false);
+            blurToggle.setChecked(false);
+            widthBar.setProgress(PaintView.DEFAULT_WIDTH);
+        }
+    }
+
+    class SeekBarChanged implements SeekBar.OnSeekBarChangeListener {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int width, boolean fromUser) {
+            paintView.setWidth(width);
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+            // nothing to do
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            // nothing to do
         }
     }
 }

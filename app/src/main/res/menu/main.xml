@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/brushwidth"
+        android:id="@+id/brush_width"
         android:icon="@drawable/ic_trash_can"
         android:title="Brush Width" />
     <item

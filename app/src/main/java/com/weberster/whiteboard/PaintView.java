@@ -19,6 +19,7 @@ import java.util.ArrayList;
 public class PaintView extends View {
 
     public static int DEFAULT_WIDTH = 20;
+    public static int MAX_WIDTH = 200;
     public static final int DEFAULT_COLOR = Color.RED;
     public static final int DEFAULT_BG_COLOR = Color.WHITE;
     private static final float TOUCH_TOLERANCE = 4;
@@ -68,25 +69,25 @@ public class PaintView extends View {
         strokeWidth = DEFAULT_WIDTH;
     }
 
-    public void changeWidth(int newWidth) {
+    public void setWidth(int newWidth) {
         strokeWidth = newWidth;
     }
 
-    public void changeBackground(int newColor) {
+    public void setBackground(int newColor) {
         backgroundColor = newColor;
         invalidate();
     }
 
-    public void changeForeground(int newColor) {
+    public void setForeground(int newColor) {
         foregroundColor = newColor;
     }
 
-    public void toggleEmboss() {
-        emboss = !emboss;
+    public void setEmboss(boolean isSet) {
+        emboss = isSet;
     }
 
-    public void toggleBlur() {
-        blur = !blur;
+    public void setBlur(boolean isSet) {
+        blur = isSet;
     }
 
     public int getForegroundColor() {
@@ -97,22 +98,8 @@ public class PaintView extends View {
         return backgroundColor;
     }
 
-    public void normal() {
-        emboss = false;
-        blur = false;
-    }
-
-    public void emboss() {
-        emboss = true;
-        blur = false;
-    }
-
-    public void blur() {
-        emboss = false;
-        blur = true;
-    }
-
     public void clear() {
+        foregroundColor = DEFAULT_COLOR;
         backgroundColor = DEFAULT_BG_COLOR;
         paths.clear();
         emboss = false;
