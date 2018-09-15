@@ -64,7 +64,7 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
     public void onColorSelected(int dialogId, int color) {
         switch(dialogId) {
             case FOREGROUND_PICKER_ID:
-                paintView.changeCurrentColor(color);
+                paintView.changeForeground(color);
                 break;
             case BACKGROUND_PICKER_ID:
                 paintView.changeBackground(color);
@@ -79,15 +79,26 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
 
     class ColorPickerButtonClick implements View.OnClickListener {
         private int dialogId;
+        private boolean showAlphaBool;
+        private int color;
 
         ColorPickerButtonClick(int dialogId) {
             this.dialogId = dialogId;
+            showAlphaBool = (dialogId == MainActivity.FOREGROUND_PICKER_ID);
         }
 
         @Override
         public void onClick(View v) {
+            if (dialogId == MainActivity.FOREGROUND_PICKER_ID) {
+                color = paintView.getForegroundColor();
+            }
+            else {
+                color = paintView.getBackgroundColor();
+            }
             ColorPickerDialog.newBuilder()
                     .setDialogId(dialogId)
+                    .setColor(color)
+                    .setShowAlphaSlider(showAlphaBool)
                     .show(MainActivity.this);
         }
     }
