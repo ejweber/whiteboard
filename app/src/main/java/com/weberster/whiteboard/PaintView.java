@@ -5,7 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.EmbossMaskFilter;
+import android.graphics.DashPathEffect;
 import android.graphics.MaskFilter;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -30,10 +30,10 @@ public class PaintView extends View {
     private int foregroundColor;
     private int backgroundColor = DEFAULT_BG_COLOR;
     private int strokeWidth;
-    private boolean emboss;
     private boolean blur;
-    private MaskFilter mEmboss;
+    private boolean dash;
     private MaskFilter mBlur;
+    private DashPathEffect mDash;
     private Bitmap mBitmap;
     private Canvas mCanvas;
     private Paint mBitmapPaint = new Paint(Paint.DITHER_FLAG);
@@ -53,9 +53,8 @@ public class PaintView extends View {
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setXfermode(null);
         mPaint.setAlpha(0xff);
-
-        mEmboss = new EmbossMaskFilter(new float[] {1, 1, 1}, 0.4f, 6, 3.5f);
         mBlur = new BlurMaskFilter(5, BlurMaskFilter.Blur.NORMAL);
+        mDash = new DashPathEffect(new float[] {100, 100}, 0);
     }
 
     public void init(DisplayMetrics metrics) {
@@ -84,9 +83,7 @@ public class PaintView extends View {
         foregroundColor = newColor;
     }
 
-    public void setEmboss(boolean isSet) {
-        emboss = isSet;
-    }
+    public void setDash(boolean isSet) { dash = isSet; }
 
     public void setBlur(boolean isSet) {
         blur = isSet;
@@ -105,8 +102,8 @@ public class PaintView extends View {
         backgroundColor = DEFAULT_BG_COLOR;
         paths.clear();
         redrawAll();
-        emboss = false;
         blur = false;
+        dash = false;
         invalidate();
     }
 
@@ -124,9 +121,10 @@ public class PaintView extends View {
         mPaint.setColor(fp.color);
         mPaint.setStrokeWidth(fp.strokeWidth);
         mPaint.setMaskFilter(null);
-        if (fp.emboss)
-            mPaint.setMaskFilter(mEmboss);
-        else if (fp.blur)
+        mPaint.setPathEffect(null);
+        if (fp.dash)
+            mPaint.setPathEffect(mDash);
+        if (fp.blur)
             mPaint.setMaskFilter(mBlur);
         mCanvas.drawPath(fp.path, mPaint);
     }
@@ -140,9 +138,8 @@ public class PaintView extends View {
 
     private void touchStart(float x, float y) {
         mPath = new Path();
-        FingerPath fp = new FingerPath(foregroundColor, emboss, blur, strokeWidth, mPath);
+        FingerPath fp = new FingerPath(foregroundColor, dash, blur, strokeWidth, mPath);
         paths.add(fp);
-
         mPath.reset();
         mPath.moveTo(x, y);
         mX = x;

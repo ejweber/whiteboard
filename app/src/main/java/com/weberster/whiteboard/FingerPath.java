@@ -5,14 +5,14 @@ import android.graphics.Path;
 public class FingerPath {
 
     public int color;
-    public boolean emboss;
+    public boolean dash;
     public boolean blur;
     public int strokeWidth;
     public Path path;
 
-    public FingerPath(int color, boolean emboss, boolean blur, int strokeWidth, Path path) {
+    public FingerPath(int color, boolean dash, boolean blur, int strokeWidth, Path path) {
         this.color = color;
-        this.emboss = emboss;
+        this.dash = dash;
         this.blur = blur;
         this.strokeWidth = strokeWidth;
         this.path = path;
