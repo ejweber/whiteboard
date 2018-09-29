@@ -33,8 +33,8 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
         final Button backgroundButton = findViewById(R.id.background);
         backgroundButton.setOnClickListener(new ColorPickerButtonClick(BACKGROUND_PICKER_ID));
 
-        final ToggleButton embossToggle = findViewById(R.id.emboss);
-        embossToggle.setOnCheckedChangeListener(new EmbossToggleClick());
+        final ToggleButton dashToggle = findViewById(R.id.dash);
+        dashToggle.setOnCheckedChangeListener(new DashToggleClick());
 
         final ToggleButton blurToggle = findViewById(R.id.blur);
         blurToggle.setOnCheckedChangeListener(new BlurToggleClick());
@@ -45,7 +45,7 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
         widthBar.setProgress(PaintView.DEFAULT_WIDTH);
 
         final Button clearButton = findViewById(R.id.clear);
-        clearButton.setOnClickListener(new ClearButtonClick(embossToggle, blurToggle, widthBar));
+        clearButton.setOnClickListener(new ClearButtonClick(dashToggle, blurToggle, widthBar));
     }
 
     @Override
@@ -91,10 +91,10 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
         }
     }
 
-    class EmbossToggleClick implements CompoundButton.OnCheckedChangeListener {
+    class DashToggleClick implements CompoundButton.OnCheckedChangeListener {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            paintView.setEmboss(isChecked);
+            paintView.setDash(isChecked);
         }
     }
 
@@ -106,12 +106,12 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
     }
 
     class ClearButtonClick implements View.OnClickListener {
-        private ToggleButton embossToggle;
+        private ToggleButton dashtoggle;
         private ToggleButton blurToggle;
         private SeekBar widthBar;
 
-        ClearButtonClick(ToggleButton embossToggle, ToggleButton blurToggle, SeekBar widthBar) {
-            this.embossToggle = embossToggle;
+        ClearButtonClick(ToggleButton dashToggle, ToggleButton blurToggle, SeekBar widthBar) {
+            this.dashtoggle = dashToggle;
             this.blurToggle = blurToggle;
             this.widthBar = widthBar;
         }
@@ -119,7 +119,7 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
         @Override
         public void onClick(View v) {
             paintView.clear();
-            embossToggle.setChecked(false);
+            dashtoggle.setChecked(false);
             blurToggle.setChecked(false);
             widthBar.setProgress(PaintView.DEFAULT_WIDTH);
         }

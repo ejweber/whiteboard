@@ -54,12 +54,12 @@
             android:textSize="12sp" />
 
         <ToggleButton
-            android:id="@+id/emboss"
+            android:id="@+id/dash"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textOff="Emboss Off"
-            android:textOn="Emboss On"
+            android:textOff="Dash Off"
+            android:textOn="Dash On"
             android:textSize="12sp" />
 
         <ToggleButton
