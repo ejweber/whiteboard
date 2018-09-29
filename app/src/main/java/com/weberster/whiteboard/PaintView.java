@@ -64,6 +64,7 @@ public class PaintView extends View {
 
         mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
+        mCanvas.drawColor(backgroundColor); // start with default background color
 
         foregroundColor = DEFAULT_COLOR;
         strokeWidth = DEFAULT_WIDTH;
@@ -75,6 +76,7 @@ public class PaintView extends View {
 
     public void setBackground(int newColor) {
         backgroundColor = newColor;
+        redrawAll();
         invalidate();
     }
 
@@ -102,6 +104,7 @@ public class PaintView extends View {
         foregroundColor = DEFAULT_COLOR;
         backgroundColor = DEFAULT_BG_COLOR;
         paths.clear();
+        redrawAll();
         emboss = false;
         blur = false;
         invalidate();
@@ -110,23 +113,29 @@ public class PaintView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.save();
-        mCanvas.drawColor(backgroundColor);
-
-        for (FingerPath fp : paths) {
-            mPaint.setColor(fp.color);
-            mPaint.setStrokeWidth(fp.strokeWidth);
-            mPaint.setMaskFilter(null);
-
-            if (fp.emboss)
-                mPaint.setMaskFilter(mEmboss);
-            else if (fp.blur)
-                mPaint.setMaskFilter(mBlur);
-
-            mCanvas.drawPath(fp.path, mPaint);
+        if (!paths.isEmpty()) {
+            processFingerPath(paths.get(paths.size() - 1));
         }
-
         canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
         canvas.restore();
+    }
+
+    private void processFingerPath(FingerPath fp) {
+        mPaint.setColor(fp.color);
+        mPaint.setStrokeWidth(fp.strokeWidth);
+        mPaint.setMaskFilter(null);
+        if (fp.emboss)
+            mPaint.setMaskFilter(mEmboss);
+        else if (fp.blur)
+            mPaint.setMaskFilter(mBlur);
+        mCanvas.drawPath(fp.path, mPaint);
+    }
+
+    private void redrawAll() {
+        mCanvas.drawColor(backgroundColor);
+        for (FingerPath fp : paths) {
+            processFingerPath(fp);
+        }
     }
 
     private void touchStart(float x, float y) {
