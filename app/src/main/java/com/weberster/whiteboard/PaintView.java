@@ -11,9 +11,14 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 public class PaintView extends View {
@@ -26,7 +31,7 @@ public class PaintView extends View {
     private float mX, mY;
     private Path mPath;
     private Paint mPaint;
-    private ArrayList<FingerPath> paths = new ArrayList<>();
+    private ArrayList<FingerPath> paths;
     private int foregroundColor;
     private int backgroundColor = DEFAULT_BG_COLOR;
     private int strokeWidth;
@@ -37,6 +42,8 @@ public class PaintView extends View {
     private Bitmap mBitmap;
     private Canvas mCanvas;
     private Paint mBitmapPaint = new Paint(Paint.DITHER_FLAG);
+    private FileOutputStream fileStream;
+    private ObjectOutputStream objectStream;
 
     public PaintView(Context context) {
         this(context, null);
@@ -54,7 +61,40 @@ public class PaintView extends View {
         mPaint.setXfermode(null);
         mPaint.setAlpha(0xff);
         mBlur = new BlurMaskFilter(5, BlurMaskFilter.Blur.NORMAL);
-        mDash = new DashPathEffect(new float[] {100, 100}, 0);
+        mDash = new DashPathEffect(new float[]{100, 100}, 0);
+        openFingerPathFile();
+    }
+
+    private void openFingerPathFile() {
+        try {
+            FileInputStream inFileStream = getContext().openFileInput("finger_paths.java");
+            ObjectInputStream inObjectStream = new ObjectInputStream(inFileStream);
+            Log.d("Unhandled", "Opened successsfully");
+            paths = (ArrayList<FingerPath>)inObjectStream.readObject();
+            Log.d("Unhandled", Integer.toString(paths.size()));
+            inFileStream.close();
+            inObjectStream.close();
+            redrawAll();
+        } catch (Exception e) {
+            Log.e("Unhandled", "Error while opening finger_paths.java for reading", e);
+        }
+
+        try {
+            fileStream = getContext().openFileOutput("finger_paths.java",
+                    Context.MODE_PRIVATE);
+            objectStream = new ObjectOutputStream(fileStream);
+        } catch (Exception e) {
+            Log.e("Unhandled", "Error while opening finger_paths.java for writing");
+        }
+    }
+
+    private void writePathsToFile() {
+        try {
+            objectStream.writeObject(paths);
+        }
+        catch (Exception e) {
+            Log.e("Unhandled", "Error while writing array list");
+        }
     }
 
     public void init(DisplayMetrics metrics) {
@@ -115,6 +155,7 @@ public class PaintView extends View {
         }
         canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
         canvas.restore();
+        writePathsToFile(); // TODO: think about where this should actually go
     }
 
     private void processFingerPath(FingerPath fp) {

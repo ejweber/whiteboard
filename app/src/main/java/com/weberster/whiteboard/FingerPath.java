@@ -2,7 +2,9 @@ package com.weberster.whiteboard;
 
 import android.graphics.Path;
 
-public class FingerPath {
+import java.io.Serializable;
+
+public class FingerPath implements Serializable {
 
     public int color;
     public boolean dash;

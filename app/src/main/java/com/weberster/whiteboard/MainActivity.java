@@ -3,6 +3,7 @@ package com.weberster.whiteboard;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -11,6 +12,11 @@ import android.widget.ToggleButton;
 
 import com.jaredrummler.android.colorpicker.ColorPickerDialog;
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class MainActivity extends Activity implements ColorPickerDialogListener {
     private static final int FOREGROUND_PICKER_ID = 0;
@@ -46,6 +52,21 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
 
         final Button clearButton = findViewById(R.id.clear);
         clearButton.setOnClickListener(new ClearButtonClick(dashToggle, blurToggle, widthBar));
+
+        /*
+        // TODO: DELETE THIS STUFF! IT IS JUST FOR TEST
+        try {
+            FileOutputStream fileStream = openFileOutput("test_file.txt", MODE_PRIVATE);
+            fileStream.write("Hola! Welcome to the program!".getBytes());
+            fileStream.close();
+        }
+        catch (FileNotFoundException e) {
+            Log.e("Exception", "FileNotFoundException recorded");
+        }
+        catch (IOException e) {
+            Log.e("Exception", "IOException recorded");
+        }
+        */
     }
 
     @Override
