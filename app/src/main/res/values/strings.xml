@@ -1,7 +1,13 @@
 <resources>
+
     <string name="app_name">WhiteBoard</string>
-    <string name="normal">Normal</string>
-    <string name="emboss">Emboss</string>
-    <string name="blur">Blur</string>
-    <string name="clear">Clear</string>
+    <string name="dash_on">Dash On</string>
+    <string name="dash_off">Dash Off</string>
+    <string name="blur_on">Blur On</string>
+    <string name="blur_off">Blur Off</string>
+    <string name="clear_content">Clear Content</string>
+    <string name="brush_width">Brush Width</string>
+    <string name="foreground">Foreground</string>
+    <string name="background">Background</string>
+
 </resources>
