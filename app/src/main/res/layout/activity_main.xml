@@ -22,7 +22,7 @@
             android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Brush Width" />
+            android:text="@string/brush_width" />
 
         <SeekBar
             android:id="@+id/brush_width"
@@ -50,7 +50,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Background"
+            android:text="@string/background"
             android:textSize="12sp" />
 
         <ToggleButton
@@ -58,8 +58,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textOff="Dash Off"
-            android:textOn="Dash On"
+            android:textOff="@string/dash_off"
+            android:textOn="@string/dash_on"
             android:textSize="12sp" />
 
         <ToggleButton
@@ -67,8 +67,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textOff="Blur Off"
-            android:textOn="Blur On"
+            android:textOff="@string/blur_off"
+            android:textOn="@string/blur_on"
             android:textSize="12sp" />
 
         <Button
@@ -76,7 +76,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Clear Content"
+            android:text="@string/clear_content"
             android:textSize="12sp" />
 
     </LinearLayout>
