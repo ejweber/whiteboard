@@ -36,7 +36,8 @@
                                           <PersistentState>
                                             <option name="values">
                                               <map>
-                                                <entry key="scalingPercent" value="63" />
+                                                <entry key="scalingPercent" value="130" />
+                                                <entry key="trimmed" value="true" />
                                               </map>
                                             </option>
                                           </PersistentState>
@@ -46,17 +47,16 @@
                                   </option>
                                   <option name="values">
                                     <map>
-                                      <entry key="foregroundImage" value="C:\Users\Eric\Desktop\if_bin-trash-gabage-delete_2203546.png" />
+                                      <entry key="backgroundAssetType" value="COLOR" />
+                                      <entry key="backgroundColor" value="000000" />
+                                      <entry key="foregroundImage" value="C:\Users\j_for\Pictures\WhiteBoardIcon.png" />
+                                      <entry key="legacyIconShape" value="CIRCLE" />
+                                      <entry key="webIconShape" value="CIRCLE" />
                                     </map>
                                   </option>
                                 </PersistentState>
                               </value>
                             </entry>
-                          </map>
-                        </option>
-                        <option name="values">
-                          <map>
-                            <entry key="outputIconType" value="ACTIONBAR" />
                           </map>
                         </option>
                       </PersistentState>
@@ -65,6 +65,11 @@
                 </map>
               </option>
             </PersistentState>
+          </value>
+        </entry>
+        <entry key="vectorWizard">
+          <value>
+            <PersistentState />
           </value>
         </entry>
       </map>
