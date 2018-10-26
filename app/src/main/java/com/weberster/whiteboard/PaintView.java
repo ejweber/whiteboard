@@ -29,7 +29,7 @@ public class PaintView extends View {
     public static final int DEFAULT_BG_COLOR = Color.WHITE;
     private static final float TOUCH_TOLERANCE = 4;
     private float mX, mY;
-    private Path mPath;
+    private FingerPath mPath;
     private Paint mPaint;
     private ArrayList<FingerPath> paths;
     private int foregroundColor;
@@ -62,7 +62,7 @@ public class PaintView extends View {
         mPaint.setAlpha(0xff);
         mBlur = new BlurMaskFilter(5, BlurMaskFilter.Blur.NORMAL);
         mDash = new DashPathEffect(new float[]{100, 100}, 0);
-        openFingerPathFile();
+        paths = new ArrayList<FingerPath>(); // TODO: HAVE OPENFINGERPATHFILE HANDLE THIS
     }
 
     private void openFingerPathFile() {
@@ -71,29 +71,41 @@ public class PaintView extends View {
             ObjectInputStream inObjectStream = new ObjectInputStream(inFileStream);
             Log.d("Unhandled", "Opened successsfully");
             paths = (ArrayList<FingerPath>)inObjectStream.readObject();
-            Log.d("Unhandled", Integer.toString(paths.size()));
             inFileStream.close();
             inObjectStream.close();
+            StringBuilder debugString = new StringBuilder();
+            for (FingerPath path : paths) {
+                debugString.append(path.toString());
+                debugString.append("\n");
+            }
+            Log.d("OpenedPaths", debugString.toString());
+            for (FingerPath path : paths) {
+
+                path.recreatePath();
+            }
             redrawAll();
         } catch (Exception e) {
             Log.e("Unhandled", "Error while opening finger_paths.java for reading", e);
         }
+    }
 
+    private void writePathsToFile() {
+        StringBuilder debugString = new StringBuilder();
+        for (FingerPath path : paths) {
+            debugString.append(path.toString());
+            debugString.append("\n");
+        }
+            Log.d("SavedPaths", debugString.toString());
         try {
             fileStream = getContext().openFileOutput("finger_paths.java",
                     Context.MODE_PRIVATE);
             objectStream = new ObjectOutputStream(fileStream);
-        } catch (Exception e) {
-            Log.e("Unhandled", "Error while opening finger_paths.java for writing");
-        }
-    }
-
-    private void writePathsToFile() {
-        try {
             objectStream.writeObject(paths);
+            objectStream.close();
+            fileStream.close();
         }
         catch (Exception e) {
-            Log.e("Unhandled", "Error while writing array list");
+            Log.e("Unhandled", "Error while writing array list", e);
         }
     }
 
@@ -107,6 +119,8 @@ public class PaintView extends View {
 
         foregroundColor = DEFAULT_COLOR;
         strokeWidth = DEFAULT_WIDTH;
+
+        openFingerPathFile(); // TODO: think about where this should go
     }
 
     public void setWidth(int newWidth) {
@@ -155,7 +169,6 @@ public class PaintView extends View {
         }
         canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
         canvas.restore();
-        writePathsToFile(); // TODO: think about where this should actually go
     }
 
     private void processFingerPath(FingerPath fp) {
@@ -167,7 +180,7 @@ public class PaintView extends View {
             mPaint.setPathEffect(mDash);
         if (fp.blur)
             mPaint.setMaskFilter(mBlur);
-        mCanvas.drawPath(fp.path, mPaint);
+        mCanvas.drawPath(fp.getPath(), mPaint);
     }
 
     private void redrawAll() {
@@ -178,9 +191,8 @@ public class PaintView extends View {
     }
 
     private void touchStart(float x, float y) {
-        mPath = new Path();
-        FingerPath fp = new FingerPath(foregroundColor, dash, blur, strokeWidth, mPath);
-        paths.add(fp);
+        mPath = new FingerPath(foregroundColor, dash, blur, strokeWidth);
+        paths.add(mPath);
         mPath.reset();
         mPath.moveTo(x, y);
         mX = x;
@@ -192,7 +204,8 @@ public class PaintView extends View {
         float dy = Math.abs(y - mY);
 
         if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-            mPath.quadTo(mX, mY, (x + mX) / 2, (y + mY) / 2);
+            float[] points = new float[] {mX, mY, (x + mX) /2, (y + mY) / 2};
+            mPath.quadTo(points[0], points[1], points[2], points[3]);
             mX = x;
             mY = y;
         }
@@ -219,6 +232,7 @@ public class PaintView extends View {
             case MotionEvent.ACTION_UP:
                 touchUp();
                 invalidate();
+                writePathsToFile(); // TODO: think about where this should actually go
                 break;
         }
 
