@@ -1,24 +1,18 @@
 package com.weberster.whiteboard;
 
-import android.app.Activity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
-import android.widget.SeekBar;
-import android.widget.ToggleButton;
+
+import com.weberster.whiteboard.MainMenuFragment.OnMainMenuInteractionListener;
 
 import com.jaredrummler.android.colorpicker.ColorPickerDialog;
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
-public class MainActivity extends Activity implements ColorPickerDialogListener {
+public class MainActivity extends FragmentActivity implements ColorPickerDialogListener,
+        OnMainMenuInteractionListener {
     private static final int FOREGROUND_PICKER_ID = 0;
     private static final int BACKGROUND_PICKER_ID = 1;
     private PaintView paintView;
@@ -38,20 +32,6 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
 
         final Button backgroundButton = findViewById(R.id.background);
         backgroundButton.setOnClickListener(new ColorPickerButtonClick(BACKGROUND_PICKER_ID));
-
-        final ToggleButton dashToggle = findViewById(R.id.dash);
-        dashToggle.setOnCheckedChangeListener(new DashToggleClick());
-
-        final ToggleButton blurToggle = findViewById(R.id.blur);
-        blurToggle.setOnCheckedChangeListener(new BlurToggleClick());
-
-        final SeekBar widthBar = findViewById(R.id.brush_width);
-        widthBar.setOnSeekBarChangeListener(new SeekBarChanged());
-        widthBar.setMax(PaintView.MAX_WIDTH);
-        widthBar.setProgress(PaintView.DEFAULT_WIDTH);
-
-        final Button clearButton = findViewById(R.id.clear);
-        clearButton.setOnClickListener(new ClearButtonClick(dashToggle, blurToggle, widthBar));
 
         paintView.openFingerPathFile();
         paintView.playBack(0.01);
@@ -100,54 +80,25 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
         }
     }
 
-    class DashToggleClick implements CompoundButton.OnCheckedChangeListener {
-        @Override
-        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            paintView.setDash(isChecked);
-        }
+    @Override
+    public void onDashButtonClick(boolean isChecked) {
+        paintView.setDash(isChecked);
     }
 
-    class BlurToggleClick implements CompoundButton.OnCheckedChangeListener {
-        @Override
-        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            paintView.setBlur(isChecked);
-        }
+    @Override
+    public void onBlurButtonClick(boolean isChecked) {
+        //paintView.setBlur(isChecked);
     }
 
-    class ClearButtonClick implements View.OnClickListener {
-        private ToggleButton dashtoggle;
-        private ToggleButton blurToggle;
-        private SeekBar widthBar;
-
-        ClearButtonClick(ToggleButton dashToggle, ToggleButton blurToggle, SeekBar widthBar) {
-            this.dashtoggle = dashToggle;
-            this.blurToggle = blurToggle;
-            this.widthBar = widthBar;
-        }
-
-        @Override
-        public void onClick(View v) {
-            paintView.clear();
-            dashtoggle.setChecked(false);
-            blurToggle.setChecked(false);
-            widthBar.setProgress(PaintView.DEFAULT_WIDTH);
-        }
+    @Override
+    public void onWidthSet(int width) {
+        //paintView.setWidth(width);
     }
 
-    class SeekBarChanged implements SeekBar.OnSeekBarChangeListener {
-        @Override
-        public void onProgressChanged(SeekBar seekBar, int width, boolean fromUser) {
-            paintView.setWidth(width);
-        }
-
-        @Override
-        public void onStartTrackingTouch(SeekBar seekBar) {
-            // nothing to do
-        }
-
-        @Override
-        public void onStopTrackingTouch(SeekBar seekBar) {
-            // nothing to do
-        }
+    @Override
+    public void onClearButtonClick() {
+        paintView.clear();
     }
+
+
 }

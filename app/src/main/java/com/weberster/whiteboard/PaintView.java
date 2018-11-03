@@ -142,8 +142,9 @@ public class PaintView extends View {
 
     public void clear() {
         foregroundColor = DEFAULT_COLOR;
-        backgroundColor = DEFAULT_BG_COLOR;
+        // backgroundColor = DEFAULT_BG_COLOR;
         paths.clear();
+        mPath = null;
         redrawAll();
         blur = false;
         dash = false;
