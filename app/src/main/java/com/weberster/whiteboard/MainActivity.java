@@ -53,20 +53,8 @@ public class MainActivity extends Activity implements ColorPickerDialogListener 
         final Button clearButton = findViewById(R.id.clear);
         clearButton.setOnClickListener(new ClearButtonClick(dashToggle, blurToggle, widthBar));
 
-        /*
-        // TODO: DELETE THIS STUFF! IT IS JUST FOR TEST
-        try {
-            FileOutputStream fileStream = openFileOutput("test_file.txt", MODE_PRIVATE);
-            fileStream.write("Hola! Welcome to the program!".getBytes());
-            fileStream.close();
-        }
-        catch (FileNotFoundException e) {
-            Log.e("Exception", "FileNotFoundException recorded");
-        }
-        catch (IOException e) {
-            Log.e("Exception", "IOException recorded");
-        }
-        */
+        paintView.openFingerPathFile();
+        paintView.playBack(0.01);
     }
 
     @Override

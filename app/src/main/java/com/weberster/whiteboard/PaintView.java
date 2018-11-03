@@ -8,7 +8,7 @@ import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.MaskFilter;
 import android.graphics.Paint;
-import android.graphics.Path;
+import android.os.CountDownTimer;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -20,6 +20,8 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class PaintView extends View {
 
@@ -65,7 +67,7 @@ public class PaintView extends View {
         paths = new ArrayList<FingerPath>(); // TODO: HAVE OPENFINGERPATHFILE HANDLE THIS
     }
 
-    private void openFingerPathFile() {
+    public void openFingerPathFile() {
         try {
             FileInputStream inFileStream = getContext().openFileInput("finger_paths.java");
             ObjectInputStream inObjectStream = new ObjectInputStream(inFileStream);
@@ -73,17 +75,6 @@ public class PaintView extends View {
             paths = (ArrayList<FingerPath>)inObjectStream.readObject();
             inFileStream.close();
             inObjectStream.close();
-            StringBuilder debugString = new StringBuilder();
-            for (FingerPath path : paths) {
-                debugString.append(path.toString());
-                debugString.append("\n");
-            }
-            Log.d("OpenedPaths", debugString.toString());
-            for (FingerPath path : paths) {
-
-                path.recreatePath();
-            }
-            redrawAll();
         } catch (Exception e) {
             Log.e("Unhandled", "Error while opening finger_paths.java for reading", e);
         }
@@ -119,8 +110,6 @@ public class PaintView extends View {
 
         foregroundColor = DEFAULT_COLOR;
         strokeWidth = DEFAULT_WIDTH;
-
-        openFingerPathFile(); // TODO: think about where this should go
     }
 
     public void setWidth(int newWidth) {
@@ -164,14 +153,14 @@ public class PaintView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.save();
-        if (!paths.isEmpty()) {
-            processFingerPath(paths.get(paths.size() - 1));
-        }
+        if (mPath != null) {processFingerPath(mPath);}
         canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
         canvas.restore();
     }
 
     private void processFingerPath(FingerPath fp) {
+        if (fp.getPath() == null) // processFingerPath may be called when path doesn't exist
+            return;
         mPaint.setColor(fp.color);
         mPaint.setStrokeWidth(fp.strokeWidth);
         mPaint.setMaskFilter(null);
@@ -237,5 +226,36 @@ public class PaintView extends View {
         }
 
         return true;
+    }
+
+    public void playBack(double speed) {
+        if (paths.isEmpty()) // if no paths were loaded from file
+            return;
+        Timer timer = new Timer();
+        TimerTask timertask = new TimerTask() { // inline anonymous class
+            private int pathIndex;
+            {
+                pathIndex = 0;
+                mPath = paths.get(pathIndex);
+                mPath.recreateFromBeginning();
+            }
+
+            @Override
+            public void run() {
+                boolean isDone = mPath.recreateMore();
+                invalidate();
+                if (isDone) {
+                    pathIndex += 1;
+                    if (pathIndex >= paths.size()) {
+                        this.cancel();
+                    }
+                    else
+                        mPath = paths.get(pathIndex);
+                        mPath.recreateFromBeginning();
+                }
+            }
+        };
+        speed *= 1000; // convert speed to ms
+        timer.schedule(timertask, 0, (long)speed);
     }
 }
