@@ -31,6 +31,14 @@ public class MainMenuFragment extends Fragment {
     public void onActivityCreated (Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        final Button foregroundButton = view.findViewById(R.id.foreground);
+        foregroundButton.setOnClickListener(new ColorPickerButtonClick(
+                R.integer.foreground_picker_id));
+
+        final Button backgroundButton = view.findViewById(R.id.background);
+        backgroundButton.setOnClickListener(new ColorPickerButtonClick(
+                R.integer.background_picker_id));
+
         final ToggleButton dashToggle = view.findViewById(R.id.dash);
         dashToggle.setOnCheckedChangeListener(new DashToggleClick());
 
@@ -74,7 +82,7 @@ public class MainMenuFragment extends Fragment {
     class SeekBarChanged implements SeekBar.OnSeekBarChangeListener {
         @Override
         public void onProgressChanged(SeekBar seekBar, int width, boolean fromUser) {
-            //listener.onWidthSet(width);
+            listener.onWidthSet(width);
         }
 
         @Override
@@ -108,10 +116,26 @@ public class MainMenuFragment extends Fragment {
         }
     }
 
+    class ColorPickerButtonClick implements View.OnClickListener {
+        private int dialogId;
+        private boolean showAlphaBool;
+
+        ColorPickerButtonClick(int dialogId) {
+            this.dialogId = dialogId;
+            showAlphaBool = (dialogId == R.integer.foreground_picker_id);
+        }
+
+        @Override
+        public void onClick(View v) {
+            listener.onColorPickerButtonClick(dialogId, showAlphaBool);
+        }
+    }
+
     public interface OnMainMenuInteractionListener {
         void onDashButtonClick(boolean isChecked);
         void onBlurButtonClick(boolean isChecked);
         void onClearButtonClick();
         void onWidthSet(int width);
+        void onColorPickerButtonClick(int dialogId, boolean showAlphaBool);
     }
 }

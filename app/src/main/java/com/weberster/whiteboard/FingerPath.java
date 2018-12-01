@@ -43,6 +43,8 @@ public class FingerPath implements Serializable {
     }
 
     public Path getPath() {
+        if (path == null || path.isEmpty())
+            recreateWholePath();
         return path;
     }
 
