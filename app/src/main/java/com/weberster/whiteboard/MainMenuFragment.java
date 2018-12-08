@@ -51,7 +51,7 @@ public class MainMenuFragment extends Fragment {
         widthBar.setProgress(PaintView.DEFAULT_WIDTH);
 
         final Button clearButton = view.findViewById(R.id.clear);
-        clearButton.setOnClickListener(new ClearButtonClick(dashToggle, blurToggle, widthBar));
+        clearButton.setOnClickListener(new ClearButtonClick());
     }
 
     @Override
@@ -97,22 +97,9 @@ public class MainMenuFragment extends Fragment {
     }
 
     class ClearButtonClick implements View.OnClickListener {
-        private ToggleButton dashtoggle;
-        private ToggleButton blurToggle;
-        private SeekBar widthBar;
-
-        ClearButtonClick(ToggleButton dashToggle, ToggleButton blurToggle, SeekBar widthBar) {
-            this.dashtoggle = dashToggle;
-            this.blurToggle = blurToggle;
-            this.widthBar = widthBar;
-        }
-
         @Override
         public void onClick(View v) {
-            listener.onClearButtonClick();
-            dashtoggle.setChecked(false);
-            blurToggle.setChecked(false);
-            widthBar.setProgress(PaintView.DEFAULT_WIDTH);
+            listener.onClearButtonClick();;
         }
     }
 

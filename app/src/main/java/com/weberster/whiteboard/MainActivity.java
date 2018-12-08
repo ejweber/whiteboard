@@ -1,6 +1,7 @@
 package com.weberster.whiteboard;
 
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
 
@@ -94,7 +95,6 @@ public class MainActivity extends FragmentActivity implements ColorPickerDialogL
         MainMenuFragment mainMenuFragment = new MainMenuFragment();
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, mainMenuFragment).commit();
-        paintView.allowTouch();
     }
 
     @Override
@@ -112,6 +112,7 @@ public class MainActivity extends FragmentActivity implements ColorPickerDialogL
         paintView.cancelPlayback();
         paintView.redrawAll();
         onPlaybackComplete();
+        paintView.allowTouch();
     }
 
     @Override

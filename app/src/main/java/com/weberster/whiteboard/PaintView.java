@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -31,6 +32,7 @@ public class PaintView extends View {
     public static final double MIN_SPEED = 0.05; // higher numbers are slower
     public static final double MAX_SPEED = 0.001; // zero is illegal
     private static final float TOUCH_TOLERANCE = 4;
+    public static final float DEFAULT_DASH_SPACE = 100;
     private float mX, mY;
     private FingerPath mPath;
     private Paint mPaint;
@@ -41,17 +43,14 @@ public class PaintView extends View {
     private boolean blur;
     private boolean dash;
     private MaskFilter mBlur;
-    private DashPathEffect mDash;
     private Bitmap mBitmap;
     private Canvas mCanvas;
     private Paint mBitmapPaint = new Paint(Paint.DITHER_FLAG);
-    private FileOutputStream fileStream;
-    private ObjectOutputStream objectStream;
     private OnPaintViewAction listener;
     private int playbackLocation;
     private Timer playbackTimer;
     private boolean canTouch;
-    private boolean touchStarted;
+    private float pausedX, pausedY = -1;
 
     public PaintView(Context context) {
         this(context, null);
@@ -69,19 +68,16 @@ public class PaintView extends View {
         mPaint.setXfermode(null);
         mPaint.setAlpha(0xff);
         mBlur = new BlurMaskFilter(5, BlurMaskFilter.Blur.NORMAL);
-        mDash = new DashPathEffect(new float[]{100, 100}, 0);
-        paths = new ArrayList<FingerPath>(); // TODO: HAVE OPENFINGERPATHFILE HANDLE THIS
+        paths = new ArrayList<>(); // TODO: HAVE OPENFINGERPATHFILE HANDLE THIS
         listener = (OnPaintViewAction) context; // TODO: check for errors
         playbackLocation = 0;
         canTouch = false;
-        touchStarted = false;
     }
 
     public void openFingerPathFile() {
         try {
             FileInputStream inFileStream = getContext().openFileInput("finger_paths.java");
             ObjectInputStream inObjectStream = new ObjectInputStream(inFileStream);
-            Log.d("Unhandled", "Opened successsfully");
             paths = (ArrayList<FingerPath>)inObjectStream.readObject();
             inFileStream.close();
             inObjectStream.close();
@@ -92,11 +88,12 @@ public class PaintView extends View {
 
     private void writePathsToFile() {
         StringBuilder debugString = new StringBuilder();
+        FileOutputStream fileStream;
+        ObjectOutputStream objectStream;
         for (FingerPath path : paths) {
             debugString.append(path.toString());
             debugString.append("\n");
         }
-            Log.d("SavedPaths", debugString.toString());
         try {
             fileStream = getContext().openFileOutput("finger_paths.java",
                     Context.MODE_PRIVATE);
@@ -136,7 +133,9 @@ public class PaintView extends View {
         foregroundColor = newColor;
     }
 
-    public void setDash(boolean isSet) { dash = isSet; }
+    public void setDash(boolean isSet) {
+        dash = isSet;
+    }
 
     public void setBlur(boolean isSet) {
         blur = isSet;
@@ -151,13 +150,13 @@ public class PaintView extends View {
     }
 
     public void clear() {
-        foregroundColor = DEFAULT_COLOR;
+        // foregroundColor = DEFAULT_COLOR;
         // backgroundColor = DEFAULT_BG_COLOR;
         paths.clear();
         mPath = null;
         redrawAll();
-        blur = false;
-        dash = false;
+        // blur = false;
+        // dash = false;
         invalidate();
     }
 
@@ -177,14 +176,13 @@ public class PaintView extends View {
         mPaint.setMaskFilter(null);
         mPaint.setPathEffect(null);
         if (fp.dash)
-            mPaint.setPathEffect(mDash);
+            mPaint.setPathEffect(calculateDash(fp.strokeWidth));
         if (fp.blur)
             mPaint.setMaskFilter(mBlur);
         mCanvas.drawPath(fp.getPath(), mPaint);
     }
 
     public void redrawAll() {
-        Log.d("Method call", "redrawall()");
         mCanvas.drawColor(backgroundColor);
         for (FingerPath fp : paths) {
             processFingerPath(fp);
@@ -193,6 +191,7 @@ public class PaintView extends View {
     }
 
     private void touchStart(float x, float y) {
+
         mPath = new FingerPath(foregroundColor, dash, blur, strokeWidth);
         paths.add(mPath);
         mPath.reset();
@@ -219,15 +218,25 @@ public class PaintView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (!canTouch)
+        if (!canTouch) {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_MOVE:
+                    pausedX = event.getX(); // remember where finger is when paused
+                    pausedY = event.getY();
+                    break;
+                case MotionEvent.ACTION_UP:
+                    pausedX = -1;
+                    pausedY = -1;
+            }
             return true; // don't allow PaintView interactions during playback
+        }
 
         float x = event.getX();
         float y = event.getY();
 
         switch(event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                touchStarted = true;
                 touchStart(x, y);
                 invalidate();
                 break;
@@ -236,20 +245,18 @@ public class PaintView extends View {
                 invalidate();
                 break;
             case MotionEvent.ACTION_UP:
-                if (touchStarted) {
-                    touchUp();
-                    invalidate();
-                    writePathsToFile(); // TODO: think about where this should actually go
-                }
+                touchUp();
+                invalidate();
+                writePathsToFile(); // TODO: think about where this should actually go
                 break;
         }
-
         return true;
     }
 
     public void playBack(double speed) {
         if (paths.isEmpty()) { // if no paths were loaded from file
             listener.onPlaybackComplete();
+            allowTouch();
             return;
         }
         playbackTimer = new Timer();
@@ -268,6 +275,11 @@ public class PaintView extends View {
                     if (playbackLocation >= paths.size()) {
                         this.cancel();
                         listener.onPlaybackComplete();
+                        if (pausedX >= 0) {
+                            touchStart(pausedX, pausedY);
+                            invalidate();
+                        }
+                        allowTouch();
                     }
                     else
                         mPath = paths.get(playbackLocation);
@@ -290,5 +302,12 @@ public class PaintView extends View {
 
     public interface OnPaintViewAction {
         void onPlaybackComplete();
+    }
+
+    public DashPathEffect calculateDash(int strokeWidth) {
+        float[] pathArray = new float[2];
+        pathArray[0] = 100;
+        pathArray[1] = DEFAULT_DASH_SPACE + (strokeWidth - DEFAULT_WIDTH) / (float)1.5;
+        return new DashPathEffect(pathArray, 0);
     }
 }
