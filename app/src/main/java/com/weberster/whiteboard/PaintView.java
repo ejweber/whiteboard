@@ -5,16 +5,23 @@ import android.graphics.Bitmap;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.EmbossMaskFilter;
+import android.graphics.DashPathEffect;
 import android.graphics.MaskFilter;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class PaintView extends View {
 
@@ -22,21 +29,28 @@ public class PaintView extends View {
     public static int MAX_WIDTH = 200;
     public static final int DEFAULT_COLOR = Color.RED;
     public static final int DEFAULT_BG_COLOR = Color.WHITE;
+    public static final double MIN_SPEED = 0.05; // higher numbers are slower
+    public static final double MAX_SPEED = 0.001; // zero is illegal
     private static final float TOUCH_TOLERANCE = 4;
+    public static final float DEFAULT_DASH_SPACE = 100;
     private float mX, mY;
-    private Path mPath;
+    private FingerPath mPath;
     private Paint mPaint;
-    private ArrayList<FingerPath> paths = new ArrayList<>();
+    private ArrayList<FingerPath> paths;
     private int foregroundColor;
     private int backgroundColor = DEFAULT_BG_COLOR;
     private int strokeWidth;
-    private boolean emboss;
     private boolean blur;
-    private MaskFilter mEmboss;
+    private boolean dash;
     private MaskFilter mBlur;
     private Bitmap mBitmap;
     private Canvas mCanvas;
     private Paint mBitmapPaint = new Paint(Paint.DITHER_FLAG);
+    private OnPaintViewAction listener;
+    private int playbackLocation;
+    private Timer playbackTimer;
+    private boolean canTouch;
+    private float pausedX, pausedY = -1;
 
     public PaintView(Context context) {
         this(context, null);
@@ -53,9 +67,44 @@ public class PaintView extends View {
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setXfermode(null);
         mPaint.setAlpha(0xff);
-
-        mEmboss = new EmbossMaskFilter(new float[] {1, 1, 1}, 0.4f, 6, 3.5f);
         mBlur = new BlurMaskFilter(5, BlurMaskFilter.Blur.NORMAL);
+        paths = new ArrayList<>(); // TODO: HAVE OPENFINGERPATHFILE HANDLE THIS
+        listener = (OnPaintViewAction) context; // TODO: check for errors
+        playbackLocation = 0;
+        canTouch = false;
+    }
+
+    public void openFingerPathFile() {
+        try {
+            FileInputStream inFileStream = getContext().openFileInput("finger_paths.java");
+            ObjectInputStream inObjectStream = new ObjectInputStream(inFileStream);
+            paths = (ArrayList<FingerPath>)inObjectStream.readObject();
+            inFileStream.close();
+            inObjectStream.close();
+        } catch (Exception e) {
+            Log.e("Unhandled", "Error while opening finger_paths.java for reading", e);
+        }
+    }
+
+    private void writePathsToFile() {
+        StringBuilder debugString = new StringBuilder();
+        FileOutputStream fileStream;
+        ObjectOutputStream objectStream;
+        for (FingerPath path : paths) {
+            debugString.append(path.toString());
+            debugString.append("\n");
+        }
+        try {
+            fileStream = getContext().openFileOutput("finger_paths.java",
+                    Context.MODE_PRIVATE);
+            objectStream = new ObjectOutputStream(fileStream);
+            objectStream.writeObject(paths);
+            objectStream.close();
+            fileStream.close();
+        }
+        catch (Exception e) {
+            Log.e("Unhandled", "Error while writing array list", e);
+        }
     }
 
     public void init(DisplayMetrics metrics) {
@@ -64,6 +113,7 @@ public class PaintView extends View {
 
         mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
+        mCanvas.drawColor(backgroundColor); // start with default background color
 
         foregroundColor = DEFAULT_COLOR;
         strokeWidth = DEFAULT_WIDTH;
@@ -75,6 +125,7 @@ public class PaintView extends View {
 
     public void setBackground(int newColor) {
         backgroundColor = newColor;
+        redrawAll();
         invalidate();
     }
 
@@ -82,8 +133,8 @@ public class PaintView extends View {
         foregroundColor = newColor;
     }
 
-    public void setEmboss(boolean isSet) {
-        emboss = isSet;
+    public void setDash(boolean isSet) {
+        dash = isSet;
     }
 
     public void setBlur(boolean isSet) {
@@ -99,41 +150,50 @@ public class PaintView extends View {
     }
 
     public void clear() {
-        foregroundColor = DEFAULT_COLOR;
-        backgroundColor = DEFAULT_BG_COLOR;
+        // foregroundColor = DEFAULT_COLOR;
+        // backgroundColor = DEFAULT_BG_COLOR;
         paths.clear();
-        emboss = false;
-        blur = false;
+        mPath = null;
+        redrawAll();
+        // blur = false;
+        // dash = false;
         invalidate();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.save();
-        mCanvas.drawColor(backgroundColor);
-
-        for (FingerPath fp : paths) {
-            mPaint.setColor(fp.color);
-            mPaint.setStrokeWidth(fp.strokeWidth);
-            mPaint.setMaskFilter(null);
-
-            if (fp.emboss)
-                mPaint.setMaskFilter(mEmboss);
-            else if (fp.blur)
-                mPaint.setMaskFilter(mBlur);
-
-            mCanvas.drawPath(fp.path, mPaint);
-        }
-
+        if (mPath != null) {processFingerPath(mPath);}
         canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
         canvas.restore();
     }
 
-    private void touchStart(float x, float y) {
-        mPath = new Path();
-        FingerPath fp = new FingerPath(foregroundColor, emboss, blur, strokeWidth, mPath);
-        paths.add(fp);
+    private void processFingerPath(FingerPath fp) {
+        if (fp.getPath() == null) // processFingerPath may be called when path doesn't exist
+            return;
+        mPaint.setColor(fp.color);
+        mPaint.setStrokeWidth(fp.strokeWidth);
+        mPaint.setMaskFilter(null);
+        mPaint.setPathEffect(null);
+        if (fp.dash)
+            mPaint.setPathEffect(calculateDash(fp.strokeWidth));
+        if (fp.blur)
+            mPaint.setMaskFilter(mBlur);
+        mCanvas.drawPath(fp.getPath(), mPaint);
+    }
 
+    public void redrawAll() {
+        mCanvas.drawColor(backgroundColor);
+        for (FingerPath fp : paths) {
+            processFingerPath(fp);
+        }
+        invalidate();
+    }
+
+    private void touchStart(float x, float y) {
+
+        mPath = new FingerPath(foregroundColor, dash, blur, strokeWidth);
+        paths.add(mPath);
         mPath.reset();
         mPath.moveTo(x, y);
         mX = x;
@@ -145,7 +205,8 @@ public class PaintView extends View {
         float dy = Math.abs(y - mY);
 
         if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-            mPath.quadTo(mX, mY, (x + mX) / 2, (y + mY) / 2);
+            float[] points = new float[] {mX, mY, (x + mX) /2, (y + mY) / 2};
+            mPath.quadTo(points[0], points[1], points[2], points[3]);
             mX = x;
             mY = y;
         }
@@ -157,6 +218,20 @@ public class PaintView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (!canTouch) {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_MOVE:
+                    pausedX = event.getX(); // remember where finger is when paused
+                    pausedY = event.getY();
+                    break;
+                case MotionEvent.ACTION_UP:
+                    pausedX = -1;
+                    pausedY = -1;
+            }
+            return true; // don't allow PaintView interactions during playback
+        }
+
         float x = event.getX();
         float y = event.getY();
 
@@ -172,9 +247,67 @@ public class PaintView extends View {
             case MotionEvent.ACTION_UP:
                 touchUp();
                 invalidate();
+                writePathsToFile(); // TODO: think about where this should actually go
                 break;
         }
-
         return true;
+    }
+
+    public void playBack(double speed) {
+        if (paths.isEmpty()) { // if no paths were loaded from file
+            listener.onPlaybackComplete();
+            allowTouch();
+            return;
+        }
+        playbackTimer = new Timer();
+        TimerTask timertask = new TimerTask() { // inline anonymous class
+            {
+                mPath = paths.get(playbackLocation);
+                mPath.recreateFromBeginning();
+            }
+
+            @Override
+            public void run() {
+                boolean isDone = mPath.recreateMore();
+                invalidate();
+                if (isDone) {
+                    playbackLocation += 1;
+                    if (playbackLocation >= paths.size()) {
+                        this.cancel();
+                        listener.onPlaybackComplete();
+                        if (pausedX >= 0) {
+                            touchStart(pausedX, pausedY);
+                            invalidate();
+                        }
+                        allowTouch();
+                    }
+                    else
+                        mPath = paths.get(playbackLocation);
+                        mPath.recreateFromBeginning();
+                }
+            }
+        };
+        speed *= 1000; // convert speed to ms
+        playbackTimer.schedule(timertask, 0, (long)speed);
+    }
+
+    public void cancelPlayback() {
+        playbackTimer.cancel();
+        paths.get(playbackLocation).reset();
+    }
+
+    public void allowTouch() {
+        canTouch = true;
+    }
+
+    public interface OnPaintViewAction {
+        void onPlaybackComplete();
+    }
+
+    public DashPathEffect calculateDash(int strokeWidth) {
+        float[] pathArray = new float[2];
+        pathArray[0] = 100;
+        pathArray[1] = DEFAULT_DASH_SPACE + (strokeWidth - DEFAULT_WIDTH) / (float)1.5;
+        return new DashPathEffect(pathArray, 0);
     }
 }
