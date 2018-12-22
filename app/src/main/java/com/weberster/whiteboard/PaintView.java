@@ -1,5 +1,6 @@
 package com.weberster.whiteboard;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BlurMaskFilter;
@@ -50,7 +51,7 @@ public class PaintView extends View {
     private int playbackLocation;
     private Timer playbackTimer;
     private boolean canTouch;
-    private float pausedX, pausedY = -1;
+    private float pausedX, pausedY;
 
     public PaintView(Context context) {
         this(context, null);
@@ -72,6 +73,7 @@ public class PaintView extends View {
         listener = (OnPaintViewAction) context; // TODO: check for errors
         playbackLocation = 0;
         canTouch = false;
+        pausedX = pausedY = -1;
     }
 
     public void openFingerPathFile() {
@@ -191,7 +193,6 @@ public class PaintView extends View {
     }
 
     private void touchStart(float x, float y) {
-
         mPath = new FingerPath(foregroundColor, dash, blur, strokeWidth);
         paths.add(mPath);
         mPath.reset();
@@ -262,6 +263,7 @@ public class PaintView extends View {
         playbackTimer = new Timer();
         TimerTask timertask = new TimerTask() { // inline anonymous class
             {
+                Log.d("Playback Location", Integer.toString(playbackLocation));
                 mPath = paths.get(playbackLocation);
                 mPath.recreateFromBeginning();
             }
@@ -269,9 +271,10 @@ public class PaintView extends View {
             @Override
             public void run() {
                 boolean isDone = mPath.recreateMore();
-                invalidate();
+                invalidate();  // invalidate can't be called from non-ui thread
                 if (isDone) {
                     playbackLocation += 1;
+                    Log.d("Playback Location", Integer.toString(playbackLocation));
                     if (playbackLocation >= paths.size()) {
                         this.cancel();
                         listener.onPlaybackComplete();
@@ -281,9 +284,9 @@ public class PaintView extends View {
                         }
                         allowTouch();
                     }
-                    else
+                    else {
                         mPath = paths.get(playbackLocation);
-                        mPath.recreateFromBeginning();
+                        mPath.recreateFromBeginning();}
                 }
             }
         };

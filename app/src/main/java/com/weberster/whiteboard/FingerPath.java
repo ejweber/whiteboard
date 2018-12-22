@@ -1,10 +1,12 @@
 package com.weberster.whiteboard;
 
 import android.graphics.Path;
+import android.util.Log;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class FingerPath implements Serializable {
     public int color;
@@ -59,13 +61,16 @@ public class FingerPath implements Serializable {
     }
 
     public boolean recreateMore() {
+        Log.d("Path Index", Integer.toString(index));
         float[] pointSet = pathPoints.get(index);
         path.quadTo(pointSet[0], pointSet[1], pointSet[2], pointSet[3]);
-        index += 1; // move 1 step along path
+        index += 1;  // move 1 step along path
         return (index >= pathPoints.size());
     }
 
     public void recreateFromBeginning() {
+        // Log.d("Whiteboard Path", toString());
+        Log.d("Path Index", Integer.toString(index));
         path = new Path();
         float [] initPoints = pathPoints.get(0);
         index = 1; // next time we should move the path to the point at position 1
@@ -78,7 +83,8 @@ public class FingerPath implements Serializable {
         string += " " + Boolean.toString(this.blur);
         string += " " + Integer.toString(this.strokeWidth);
         string += " " + Integer.toString(this.pathPoints.size());
-        for (float[] pointSet : pathPoints) {
+        List<float[]> copyOfPathPoints = new ArrayList<>(pathPoints);
+        for (float[] pointSet : copyOfPathPoints) {
             string += " " + Arrays.toString(pointSet);
         }
         return string;
