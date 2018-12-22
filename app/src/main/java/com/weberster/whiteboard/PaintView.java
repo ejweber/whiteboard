@@ -271,7 +271,7 @@ public class PaintView extends View {
             @Override
             public void run() {
                 boolean isDone = mPath.recreateMore();
-                invalidate();  // invalidate can't be called from non-ui thread
+                postInvalidate();  // invalidate can't be called from non-ui thread
                 if (isDone) {
                     playbackLocation += 1;
                     Log.d("Playback Location", Integer.toString(playbackLocation));
@@ -280,7 +280,7 @@ public class PaintView extends View {
                         listener.onPlaybackComplete();
                         if (pausedX >= 0) {
                             touchStart(pausedX, pausedY);
-                            invalidate();
+                            postInvalidate();
                         }
                         allowTouch();
                     }
