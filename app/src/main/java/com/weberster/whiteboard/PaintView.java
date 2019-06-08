@@ -1,5 +1,6 @@
 package com.weberster.whiteboard;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BlurMaskFilter;
@@ -50,7 +51,7 @@ public class PaintView extends View {
     private int playbackLocation;
     private Timer playbackTimer;
     private boolean canTouch;
-    private float pausedX, pausedY = -1;
+    private float pausedX, pausedY;
 
     public PaintView(Context context) {
         this(context, null);
@@ -72,6 +73,7 @@ public class PaintView extends View {
         listener = (OnPaintViewAction) context; // TODO: check for errors
         playbackLocation = 0;
         canTouch = false;
+        pausedX = pausedY = -1;
     }
 
     public void openFingerPathFile() {
@@ -126,7 +128,6 @@ public class PaintView extends View {
     public void setBackground(int newColor) {
         backgroundColor = newColor;
         redrawAll();
-        invalidate();
     }
 
     public void setForeground(int newColor) {
@@ -150,22 +151,25 @@ public class PaintView extends View {
     }
 
     public void clear() {
-        // foregroundColor = DEFAULT_COLOR;
-        // backgroundColor = DEFAULT_BG_COLOR;
         paths.clear();
         mPath = null;
         redrawAll();
-        // blur = false;
-        // dash = false;
-        invalidate();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.save();
-        if (mPath != null) {processFingerPath(mPath);}
         canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
         canvas.restore();
+    }
+
+    private void pushToBitmap(boolean background) {
+        //if (mPath != null) {processFingerPath(mPath);}
+        processFingerPath(mPath);
+        if (background)
+            postInvalidate();  // invalidate can't be called from non-ui thread
+        else
+            invalidate();
     }
 
     private void processFingerPath(FingerPath fp) {
@@ -191,7 +195,6 @@ public class PaintView extends View {
     }
 
     private void touchStart(float x, float y) {
-
         mPath = new FingerPath(foregroundColor, dash, blur, strokeWidth);
         paths.add(mPath);
         mPath.reset();
@@ -238,15 +241,15 @@ public class PaintView extends View {
         switch(event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 touchStart(x, y);
-                invalidate();
+                pushToBitmap(false);
                 break;
             case MotionEvent.ACTION_MOVE:
                 touchMove(x, y);
-                invalidate();
+                pushToBitmap(false);
                 break;
             case MotionEvent.ACTION_UP:
                 touchUp();
-                invalidate();
+                pushToBitmap(false);
                 writePathsToFile(); // TODO: think about where this should actually go
                 break;
         }
@@ -261,30 +264,34 @@ public class PaintView extends View {
         }
         playbackTimer = new Timer();
         TimerTask timertask = new TimerTask() { // inline anonymous class
+            boolean isDone;
             {
+                Log.d("Playback Location", Integer.toString(playbackLocation));
                 mPath = paths.get(playbackLocation);
-                mPath.recreateFromBeginning();
+                isDone = mPath.recreateFromBeginning();
             }
 
             @Override
             public void run() {
-                boolean isDone = mPath.recreateMore();
-                invalidate();
                 if (isDone) {
                     playbackLocation += 1;
+                    Log.d("Playback Location", Integer.toString(playbackLocation));
                     if (playbackLocation >= paths.size()) {
                         this.cancel();
                         listener.onPlaybackComplete();
                         if (pausedX >= 0) {
                             touchStart(pausedX, pausedY);
-                            invalidate();
                         }
                         allowTouch();
                     }
-                    else
+                    else {
                         mPath = paths.get(playbackLocation);
-                        mPath.recreateFromBeginning();
+                        isDone = mPath.recreateFromBeginning();
+                    }
                 }
+                else
+                    isDone = mPath.recreateMore();
+                pushToBitmap(true);
             }
         };
         speed *= 1000; // convert speed to ms
