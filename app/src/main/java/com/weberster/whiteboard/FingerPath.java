@@ -5,20 +5,29 @@ import android.util.Log;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class FingerPath implements Serializable {
-    public int color;
+    // new stuff (in database schema)
+    public int pathId;
+    public long pathColor;
+    public long boardColor;
     public boolean dash;
     public boolean blur;
+    public boolean clear;
+    public List<FingerPoint> fingerPoints;
+    public String userId;
+
+    // forgotten stuff (should be in database schema)
     public int strokeWidth;
+
+    // old stuff (not in database schema)
     private ArrayList<float[]> pathPoints;
     private transient Path path; // transient means it will not be serialized
     private transient int index; // remember where in the path recreation we are
 
-    public FingerPath(int color, boolean dash, boolean blur, int strokeWidth) {
-        this.color = color;
+    public FingerPath(int pathColor, boolean dash, boolean blur, int strokeWidth) {
+        this.pathColor = pathColor;
         this.dash = dash;
         this.blur = blur;
         this.strokeWidth = strokeWidth;
@@ -85,14 +94,14 @@ public class FingerPath implements Serializable {
     }
 
     public String toString() {
-        String string = Integer.toString(this.color);
-        string += " " + Boolean.toString(this.dash);
-        string += " " + Boolean.toString(this.blur);
-        string += " " + Integer.toString(this.strokeWidth);
-        string += " " + Integer.toString(this.pathPoints.size());
-        List<float[]> copyOfPathPoints = new ArrayList<>(pathPoints);
-        for (float[] pointSet : copyOfPathPoints) {
-            string += " " + Arrays.toString(pointSet);
+        String string = "color: " + Long.toString(this.pathColor) + "\n";
+        string += " " + "dash: " + Boolean.toString(this.dash) + "\n";
+        string += " " + "blur: " + Boolean.toString(this.blur) + "\n";
+        string += " " + "strokeWidth: " + Integer.toString(this.strokeWidth) + "\n";
+        string += " " + "numFingerPoints: " + Integer.toString(this.fingerPoints.size()) + "\n";
+        string += " " + "fingerPoints: " +"\n";
+        for (FingerPoint point : fingerPoints) {
+            string += "   " + point.x + " " + point.y + "\n";
         }
         return string;
     }

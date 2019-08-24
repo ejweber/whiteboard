@@ -1,6 +1,5 @@
 package com.weberster.whiteboard;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BlurMaskFilter;
@@ -20,7 +19,6 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -175,7 +173,7 @@ public class PaintView extends View {
     private void processFingerPath(FingerPath fp) {
         if (fp.getPath() == null) // processFingerPath may be called when path doesn't exist
             return;
-        mPaint.setColor(fp.color);
+        mPaint.setColor(fp.pathColor);
         mPaint.setStrokeWidth(fp.strokeWidth);
         mPaint.setMaskFilter(null);
         mPaint.setPathEffect(null);
