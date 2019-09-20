@@ -1,17 +1,19 @@
 package com.weberster.whiteboard;
 
 import android.graphics.Path;
+import android.support.annotation.ColorInt;
 import android.util.Log;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class FingerPath implements Serializable {
     // new stuff (in database schema)
     public int pathId;
-    public long pathColor;
-    public long boardColor;
+    public @ColorInt Integer pathColor;
+    public @ColorInt Integer boardColor;
     public boolean dash;
     public boolean blur;
     public boolean clear;
@@ -93,16 +95,22 @@ public class FingerPath implements Serializable {
             return false;
     }
 
+    @Override
     public String toString() {
-        String string = "color: " + Long.toString(this.pathColor) + "\n";
-        string += " " + "dash: " + Boolean.toString(this.dash) + "\n";
-        string += " " + "blur: " + Boolean.toString(this.blur) + "\n";
-        string += " " + "strokeWidth: " + Integer.toString(this.strokeWidth) + "\n";
-        string += " " + "numFingerPoints: " + Integer.toString(this.fingerPoints.size()) + "\n";
-        string += " " + "fingerPoints: " +"\n";
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("blur: %b\n", this.blur));
+        sb.append(String.format(" boardColor: 0x%02x\n", this.boardColor));
+        sb.append(String.format(" clear: %b\n", this.clear));
+        sb.append(String.format(" dash: %b\n", this.dash));
+        sb.append(" fingerPoints:\n");
         for (FingerPoint point : fingerPoints) {
-            string += "   " + point.x + " " + point.y + "\n";
+            sb.append(String.format(Locale.US,"   %d %d\n", point.x, point.y));
         }
-        return string;
+        sb.append(String.format(" pathColor: 0x%02x\n", this.pathColor));
+        sb.append(String.format(Locale.US, " pathId: %d\n", this.pathId));
+        sb.append(String.format(Locale.US," strokeWidth: %d\n", this.strokeWidth));
+        sb.append(String.format(" userId: %s\n", this.userId));
+
+        return sb.toString();
     }
 }

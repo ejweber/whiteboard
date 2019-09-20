@@ -1,9 +1,18 @@
 package com.weberster.whiteboard;
 
+import android.support.annotation.ColorInt;
 import android.util.Log;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 
 import org.junit.Test;
 
+import java.lang.reflect.Type;
 import java.util.List;
 
 import retrofit2.Call;
@@ -27,14 +36,17 @@ public class ExampleUnitTest {
     @Test
     public void canGetFingerPaths() {
         // create Retrofit instance
-        final String baseURL = "http://192.168.1.211:9876/api/v1/";
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(baseURL).addConverterFactory(GsonConverterFactory.create()).build();
+        final String baseURL = "http://192.168.1.2:9876/api/v1/";
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(Integer.class, new ColorDeserializer());
+        Gson gson = gsonBuilder.create();
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(baseURL).addConverterFactory(GsonConverterFactory.create(gson)).build();
 
         // create API service
         API apiService = retrofit.create(API.class);
 
         // get and print FingerPaths
-        Call<List<FingerPath>> call = apiService.getFingerPaths("test");
+        Call<List<FingerPath>> call = apiService.getFingerPaths("test_board");
         Response<List<FingerPath>> response;
         try {
             response = call.execute();
